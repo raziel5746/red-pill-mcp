@@ -43,7 +43,8 @@ export class PopupWebviewProvider {
         );
 
         // Generate buttons HTML
-        const buttonsHtml = this.config.buttons?.map(button => `
+        const buttonsHtml = this.config.buttons?.map(button => {
+            return `
             <button 
                 class="popup-button popup-button--${button.style || 'secondary'}" 
                 data-button-id="${button.id}"
@@ -51,7 +52,8 @@ export class PopupWebviewProvider {
             >
                 ${this.escapeHtml(button.label)}
             </button>
-        `).join('') || '';
+        `;
+        }).join('') || '';
 
         return `
         <!DOCTYPE html>
@@ -59,7 +61,7 @@ export class PopupWebviewProvider {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource};">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource} 'unsafe-inline';">
             <link href="${styleUri}" rel="stylesheet">
             <title>${this.escapeHtml(this.config.title || 'AI Message')}</title>
         </head>
@@ -104,6 +106,18 @@ export class PopupWebviewProvider {
             <script>
                 const vscode = acquireVsCodeApi();
                 const popupConfig = ${JSON.stringify(this.config)};
+                
+                // Test if vscode API is working
+                try {
+                    vscode.postMessage({
+                        type: 'debug',
+                        message: 'Inline script executed successfully',
+                        hasVscode: !!vscode,
+                        hasConfig: !!popupConfig
+                    });
+                } catch (error) {
+                    console.error('Failed to post initial message:', error);
+                }
             </script>
             <script src="${scriptUri}"></script>
         </body>

@@ -9,7 +9,16 @@
 
     // Initialize popup
     function initializePopup() {
-        console.log('Initializing popup with config:', popupConfig);
+        // Send debug message to extension
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: 'Popup JavaScript initialized',
+                config: popupConfig
+            });
+        } catch (e) {
+            // vscode object might not be available yet
+        }
 
         // Set up event listeners
         setupEventListeners();
@@ -22,8 +31,15 @@
         // Focus first button or close button
         focusFirstInteractiveElement();
 
-        // Mark popup as ready
-        console.log('Popup initialized successfully');
+        // Send ready message to extension
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: 'Popup fully initialized and ready'
+            });
+        } catch (e) {
+            // Ignore errors
+        }
     }
 
     function setupEventListeners() {
@@ -35,7 +51,17 @@
 
         // Action buttons
         const buttons = document.querySelectorAll('.popup-button');
-        buttons.forEach(button => {
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: `Found ${buttons.length} popup buttons`,
+                buttonIds: Array.from(buttons).map(b => b.dataset.buttonId)
+            });
+        } catch (e) {
+            // Ignore errors
+        }
+        
+        buttons.forEach((button, index) => {
             button.addEventListener('click', handleButtonClick);
         });
 
@@ -58,7 +84,17 @@
         const buttonId = button.dataset.buttonId;
         const action = button.dataset.action;
 
-        console.log('Button clicked:', { buttonId, action });
+        // Send debug message about button click
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: `Button clicked: ${buttonId}`,
+                buttonId: buttonId,
+                action: action
+            });
+        } catch (e) {
+            // Ignore errors
+        }
 
         // Add loading state
         button.classList.add('loading');
@@ -72,6 +108,17 @@
             timestamp: Date.now(),
             data: gatherFormData()
         };
+
+        // Send debug message before sending actual response
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: `About to send button response: ${buttonId}`,
+                responseData: responseData
+            });
+        } catch (e) {
+            // Ignore errors
+        }
 
         // Send response to extension
         sendMessage(responseData);

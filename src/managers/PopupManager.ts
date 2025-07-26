@@ -35,8 +35,6 @@ export class PopupManager {
                 throw new Error(`Popup with ID ${config.id} already exists`);
             }
 
-            this.logger.debug('Creating popup:', config);
-
             // Create webview panel
             const webviewProvider = new PopupWebviewProvider(this.context, config, this.logger);
             const webviewPanel = await webviewProvider.createWebview();
@@ -68,7 +66,7 @@ export class PopupManager {
             // Store the instance
             this.state.activePopups.set(config.id, instance);
 
-            this.logger.info(`Popup created with ID: ${config.id}`);
+            this.logger.debug(`Popup created: ${config.id}`);
             return config.id;
 
         } catch (error) {
@@ -93,7 +91,7 @@ export class PopupManager {
             // Clean up the popup
             this.cleanupPopup(popupId);
 
-            this.logger.info(`Popup closed: ${popupId}`);
+            this.logger.debug(`Popup closed: ${popupId}`);
         } catch (error) {
             this.logger.error(`Error closing popup ${popupId}:`, error);
         }
@@ -130,10 +128,35 @@ export class PopupManager {
         this.onResponseCallback = callback;
     }
 
+    async handlePopupRequest(message: any): Promise<void> {
+        try {
+            // Extract popup configuration from message - use the server's popup ID
+            const config: PopupConfig = {
+                id: message.popupId, // Use the server's popup ID
+                title: message.options.title,
+                content: message.options.message,
+                buttons: message.options.buttons?.map((label: string) => ({ id: label, label })),
+                timeout: message.options.timeout
+            };
+            
+            // Create the popup with the server's ID
+            await this.createPopup(config);
+            
+        } catch (error) {
+            this.logger.error('Failed to handle popup request:', error);
+        }
+    }
+
     private handleWebviewMessage(popupId: string, message: any): void {
-        this.logger.debug(`Received message from popup ${popupId}:`, message);
+        this.logger.debug(`Webview message from popup ${popupId}:`, message.type);
 
         try {
+            // Handle debug messages from webview
+            if (message.type === 'debug') {
+                this.logger.debug(`Webview Debug (${popupId}): ${message.message}`);
+                return;
+            }
+
             const response: PopupResponse = {
                 popupId,
                 buttonId: message.buttonId,
@@ -141,7 +164,6 @@ export class PopupManager {
                 timestamp: Date.now(),
                 dismissed: message.type === 'dismiss'
             };
-
             this.sendResponse(response);
             this.closePopup(popupId);
 
@@ -166,6 +188,8 @@ export class PopupManager {
         // Call the registered callback
         if (this.onResponseCallback) {
             this.onResponseCallback(response);
+        } else {
+            this.logger.warn('No onResponseCallback registered');
         }
 
         // Call specific callback if registered
@@ -174,8 +198,6 @@ export class PopupManager {
             callback(response);
             this.responseCallbacks.delete(response.popupId);
         }
-
-        this.logger.debug('Popup response sent:', response);
     }
 
     private cleanupPopup(popupId: string): void {

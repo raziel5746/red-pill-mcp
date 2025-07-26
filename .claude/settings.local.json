@@ -4,7 +4,9 @@
       "Bash(ls:*)",
       "Bash(dir /a C:UsersrazieDesktopred-pill-mcp)",
       "Bash(mkdir:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run compile:*)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }
