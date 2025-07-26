@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(dir /a C:UsersrazieDesktopred-pill-mcp)",
+      "Bash(mkdir:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": []
+  }
+}

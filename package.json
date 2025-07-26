@@ -1,0 +1,119 @@
+{
+  "name": "red-pill-mcp",
+  "displayName": "Red Pill MCP",
+  "description": "VS Code extension enabling AI-to-User popup communication via MCP",
+  "version": "0.1.0",
+  "publisher": "red-pill-mcp",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "mcp",
+    "communication",
+    "popup",
+    "dialog"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "redPillMcp.showPopup",
+        "title": "Show AI Popup",
+        "category": "Red Pill MCP"
+      },
+      {
+        "command": "redPillMcp.clearAllPopups",
+        "title": "Clear All Popups",
+        "category": "Red Pill MCP"
+      },
+      {
+        "command": "redPillMcp.toggleConnection",
+        "title": "Toggle MCP Connection",
+        "category": "Red Pill MCP"
+      }
+    ],
+    "configuration": {
+      "title": "Red Pill MCP",
+      "properties": {
+        "redPillMcp.mcpServerUrl": {
+          "type": "string",
+          "default": "ws://localhost:8080",
+          "description": "MCP server WebSocket URL"
+        },
+        "redPillMcp.autoConnect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically connect to MCP server on startup"
+        },
+        "redPillMcp.popupTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Popup timeout in milliseconds (0 for no timeout)"
+        },
+        "redPillMcp.maxConcurrentPopups": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum number of concurrent popups"
+        },
+        "redPillMcp.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info",
+          "description": "Logging level"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "start-server": "node start-server.js",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:e2e": "jest tests/e2e",
+    "test:performance": "jest tests/performance --testTimeout=120000",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:debug": "DEBUG=true jest --verbose",
+    "test:quick": "jest tests/unit tests/integration --testTimeout=10000",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "16.x",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.80.0",
+    "@types/ws": "^8.5.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vscode/test-electron": "^2.3.4",
+    "@vscode/vsce": "^2.20.0",
+    "eslint": "^8.47.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "uuid": "^9.0.0",
+    "ws": "^8.13.0"
+  }
+}

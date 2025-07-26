@@ -1,0 +1,350 @@
+/* VS Code Theme-aware Popup Styles */
+:root {
+    --popup-bg: var(--vscode-editor-background, #1e1e1e);
+    --popup-border: var(--vscode-panel-border, #2d2d30);
+    --popup-text: var(--vscode-editor-foreground, #cccccc);
+    --popup-header-bg: var(--vscode-titleBar-activeBackground, #2d2d30);
+    --popup-button-primary: var(--vscode-button-background, #0e639c);
+    --popup-button-primary-hover: var(--vscode-button-hoverBackground, #1177bb);
+    --popup-button-secondary: var(--vscode-button-secondaryBackground, #3c3c3c);
+    --popup-button-secondary-hover: var(--vscode-button-secondaryHoverBackground, #464647);
+    --popup-button-danger: var(--vscode-errorForeground, #f14c4c);
+    --popup-shadow: rgba(0, 0, 0, 0.3);
+    --popup-radius: 6px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    font-size: var(--vscode-font-size, 13px);
+    line-height: 1.4;
+    color: var(--popup-text);
+    background: var(--popup-bg);
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.popup-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--popup-bg);
+    border: 1px solid var(--popup-border);
+    border-radius: var(--popup-radius);
+    box-shadow: 0 8px 32px var(--popup-shadow);
+    overflow: hidden;
+    animation: popup-fade-in 0.3s ease-out;
+}
+
+@keyframes popup-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--popup-header-bg);
+    border-bottom: 1px solid var(--popup-border);
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--popup-text);
+    flex: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.popup-close {
+    background: none;
+    border: none;
+    color: var(--popup-text);
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.popup-close:hover {
+    background: var(--popup-button-secondary-hover);
+}
+
+.popup-content {
+    padding: 20px;
+}
+
+.popup-message {
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.popup-message strong {
+    font-weight: 600;
+    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+}
+
+.popup-message em {
+    font-style: italic;
+    color: var(--vscode-descriptionForeground, var(--popup-text));
+}
+
+.popup-message code {
+    background: var(--vscode-textCodeBlock-background, rgba(255, 255, 255, 0.1));
+    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--vscode-editor-font-family, 'Monaco', 'Consolas', monospace);
+    font-size: 0.9em;
+}
+
+.popup-message a {
+    color: var(--vscode-textLink-foreground, #3794ff);
+    text-decoration: none;
+}
+
+.popup-message a:hover {
+    color: var(--vscode-textLink-activeForeground, #4daafc);
+    text-decoration: underline;
+}
+
+.popup-metadata {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--popup-border);
+}
+
+.popup-metadata details {
+    cursor: pointer;
+}
+
+.popup-metadata summary {
+    font-weight: 500;
+    padding: 8px 0;
+    color: var(--vscode-descriptionForeground, var(--popup-text));
+}
+
+.popup-metadata pre {
+    background: var(--vscode-textCodeBlock-background, rgba(255, 255, 255, 0.05));
+    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+    padding: 12px;
+    border-radius: 4px;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 0.85em;
+    overflow-x: auto;
+    margin-top: 8px;
+    border: 1px solid var(--popup-border);
+}
+
+.popup-actions {
+    padding: 16px 20px;
+    background: var(--vscode-panel-background, var(--popup-bg));
+    border-top: 1px solid var(--popup-border);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.popup-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.popup-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.popup-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: width 0.3s, height 0.3s;
+    transform: translate(-50%, -50%);
+}
+
+.popup-button:active::before {
+    width: 100px;
+    height: 100px;
+}
+
+.popup-button--primary {
+    background: var(--popup-button-primary);
+    color: var(--vscode-button-foreground, #ffffff);
+}
+
+.popup-button--primary:hover:not(:disabled) {
+    background: var(--popup-button-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 99, 156, 0.3);
+}
+
+.popup-button--secondary {
+    background: var(--popup-button-secondary);
+    color: var(--vscode-button-secondaryForeground, var(--popup-text));
+}
+
+.popup-button--secondary:hover:not(:disabled) {
+    background: var(--popup-button-secondary-hover);
+    transform: translateY(-1px);
+}
+
+.popup-button--danger {
+    background: var(--popup-button-danger);
+    color: #ffffff;
+}
+
+.popup-button--danger:hover:not(:disabled) {
+    background: var(--vscode-errorForeground, #f14c4c);
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(241, 76, 76, 0.3);
+}
+
+.popup-footer {
+    padding: 12px 20px;
+    background: var(--vscode-statusBar-background, #007acc);
+    color: var(--vscode-statusBar-foreground, #ffffff);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.popup-id {
+    font-family: var(--vscode-editor-font-family, monospace);
+    opacity: 0.8;
+}
+
+.popup-timeout {
+    font-weight: 500;
+}
+
+.popup-timeout.warning {
+    color: var(--vscode-notificationsWarningIcon-foreground, #ffcc02);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .popup-container {
+        margin: 0;
+    }
+    
+    .popup-header {
+        padding: 10px 12px;
+    }
+    
+    .popup-content {
+        padding: 16px;
+    }
+    
+    .popup-actions {
+        padding: 12px;
+        flex-direction: column;
+    }
+    
+    .popup-button {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .popup-footer {
+        padding: 8px 12px;
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+}
+
+/* Dark theme specific adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --popup-shadow: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .popup-container {
+        border-width: 2px;
+    }
+    
+    .popup-button {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Focus styles for accessibility */
+.popup-button:focus,
+.popup-close:focus {
+    outline: 2px solid var(--vscode-focusBorder, #007fd4);
+    outline-offset: 2px;
+}
+
+/* Loading state */
+.popup-button.loading {
+    position: relative;
+    color: transparent;
+}
+
+.popup-button.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
