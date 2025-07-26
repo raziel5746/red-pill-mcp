@@ -87,11 +87,39 @@ export class PopupWebviewProvider {
                     ` : ''}
                 </div>
                 
-                ${buttonsHtml ? `
-                    <div class="popup-actions">
-                        ${buttonsHtml}
+                <div class="popup-actions">
+                    ${buttonsHtml}
+                    <button 
+                        class="popup-button popup-button--secondary" 
+                        id="customTextButton"
+                        data-action="custom-text"
+                    >
+                        Custom text
+                    </button>
+                </div>
+                
+                <div class="popup-custom-text" id="customTextArea" style="display: none;">
+                    <textarea 
+                        id="customTextInput" 
+                        placeholder="Enter your custom response here..." 
+                        rows="3"
+                        class="popup-textarea"
+                    ></textarea>
+                    <div class="popup-custom-actions">
+                        <button 
+                            class="popup-button popup-button--primary" 
+                            id="sendCustomTextButton"
+                        >
+                            Send
+                        </button>
+                        <button 
+                            class="popup-button popup-button--secondary" 
+                            id="cancelCustomTextButton"
+                        >
+                            Cancel
+                        </button>
                     </div>
-                ` : ''}
+                </div>
                 
                 <div class="popup-footer">
                     <span class="popup-id">ID: ${this.escapeHtml(this.config.id)}</span>

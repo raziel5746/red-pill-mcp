@@ -79,6 +79,7 @@ export interface ServerPopupInstance {
 export interface PopupResult {
     button?: string;
     input?: string;
+    customText?: string;
     cancelled?: boolean;
     timedOut?: boolean;
 }
@@ -204,6 +205,7 @@ export interface PopupButton {
 export interface PopupResponse {
     popupId: string;
     buttonId?: string;
+    customText?: string;
     customData?: any;
     timestamp: number;
     dismissed?: boolean;

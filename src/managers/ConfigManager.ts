@@ -10,7 +10,7 @@ export class ConfigManager {
         return {
             mcpServerUrl: config.get('mcpServerUrl', 'ws://localhost:8080'),
             autoConnect: config.get('autoConnect', true),
-            popupTimeout: config.get('popupTimeout', 30000),
+            popupTimeout: config.get('popupTimeout', 0),
             maxConcurrentPopups: config.get('maxConcurrentPopups', 3),
             logLevel: config.get('logLevel', 'info') as 'debug' | 'info' | 'warn' | 'error'
         };

@@ -54,7 +54,7 @@
         },
         "redPillMcp.popupTimeout": {
           "type": "number",
-          "default": 30000,
+          "default": 0,
           "description": "Popup timeout in milliseconds (0 for no timeout)"
         },
         "redPillMcp.maxConcurrentPopups": {

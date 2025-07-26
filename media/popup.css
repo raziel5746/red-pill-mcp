@@ -27,11 +27,14 @@ body {
     background: var(--popup-bg);
     padding: 20px;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .popup-container {
     max-width: 600px;
-    margin: 0 auto;
+    width: 100%;
     background: var(--popup-bg);
     border: 1px solid var(--popup-border);
     border-radius: var(--popup-radius);
@@ -269,29 +272,29 @@ body {
     body {
         padding: 10px;
     }
-    
+
     .popup-container {
         margin: 0;
     }
-    
+
     .popup-header {
         padding: 10px 12px;
     }
-    
+
     .popup-content {
         padding: 16px;
     }
-    
+
     .popup-actions {
         padding: 12px;
         flex-direction: column;
     }
-    
+
     .popup-button {
         width: 100%;
         margin: 0;
     }
-    
+
     .popup-footer {
         padding: 8px 12px;
         flex-direction: column;
@@ -312,7 +315,7 @@ body {
     .popup-container {
         border-width: 2px;
     }
-    
+
     .popup-button {
         border: 1px solid currentColor;
     }
@@ -347,4 +350,60 @@ body {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* Custom text area styles */
+.popup-custom-text {
+    padding: 16px 20px;
+    background: var(--vscode-panel-background, var(--popup-bg));
+    border-top: 1px solid var(--popup-border);
+}
+
+/* Removed problematic CSS rule that was interfering with JavaScript toggle */
+
+.popup-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1px solid var(--popup-border);
+    border-radius: 4px;
+    background: var(--vscode-input-background, var(--popup-bg));
+    color: var(--vscode-input-foreground, var(--popup-text));
+    font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    font-size: var(--vscode-font-size, 13px);
+    line-height: 1.4;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.popup-textarea:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder, #007fd4);
+    box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007fd4);
+}
+
+.popup-textarea::placeholder {
+    color: var(--vscode-input-placeholderForeground, rgba(204, 204, 204, 0.6));
+}
+
+.popup-custom-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Responsive adjustments for custom text area */
+@media (max-width: 480px) {
+    .popup-custom-text {
+        padding: 12px;
+    }
+
+    .popup-custom-actions {
+        flex-direction: column;
+    }
+
+    .popup-custom-actions .popup-button {
+        width: 100%;
+    }
 }

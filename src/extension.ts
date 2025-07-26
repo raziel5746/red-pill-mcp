@@ -267,6 +267,7 @@ function setupPopupResponseHandling(): void {
                 result: {
                     button: response.buttonId,
                     input: response.customData?.inputValue,
+                    customText: response.customText,
                     cancelled: response.dismissed,
                     timedOut: false
                 }

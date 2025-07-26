@@ -130,13 +130,16 @@ export class PopupManager {
 
     async handlePopupRequest(message: any): Promise<void> {
         try {
+            // Get default timeout from extension settings
+            const defaultTimeout = vscode.workspace.getConfiguration('redPillMcp').get('popupTimeout', 0);
+            
             // Extract popup configuration from message - use the server's popup ID
             const config: PopupConfig = {
                 id: message.popupId, // Use the server's popup ID
                 title: message.options.title,
                 content: message.options.message,
                 buttons: message.options.buttons?.map((label: string) => ({ id: label, label })),
-                timeout: message.options.timeout
+                timeout: message.options.timeout !== undefined ? message.options.timeout : defaultTimeout
             };
             
             // Create the popup with the server's ID
@@ -160,12 +163,19 @@ export class PopupManager {
             const response: PopupResponse = {
                 popupId,
                 buttonId: message.buttonId,
+                customText: message.customText,
                 customData: message.data,
                 timestamp: Date.now(),
                 dismissed: message.type === 'dismiss'
             };
+            
+            // Send response first, then close popup
             this.sendResponse(response);
-            this.closePopup(popupId);
+            
+            // Small delay to ensure response is processed before closing
+            setTimeout(() => {
+                this.closePopup(popupId);
+            }, 100);
 
         } catch (error) {
             this.logger.error(`Error handling webview message from popup ${popupId}:`, error);

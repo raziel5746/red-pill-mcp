@@ -114,40 +114,6 @@ export class MCPServer extends EventEmitter {
                         }
                     },
                     {
-                        name: 'get_user_response',
-                        description: 'Wait for and return user response from a popup',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                popupId: {
-                                    type: 'string',
-                                    description: 'Popup ID to wait for (optional, waits for any popup if not provided)'
-                                },
-                                timeout: {
-                                    type: 'number',
-                                    description: 'Timeout in milliseconds (optional)'
-                                }
-                            }
-                        }
-                    },
-                    {
-                        name: 'close_popup',
-                        description: 'Programmatically close popups',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                popupId: {
-                                    type: 'string',
-                                    description: 'Popup ID to close (optional, closes all if not provided)'
-                                },
-                                vscodeInstanceId: {
-                                    type: 'string',
-                                    description: 'VS Code instance ID (optional)'
-                                }
-                            }
-                        }
-                    },
-                    {
                         name: 'list_active_popups',
                         description: 'List current active popups',
                         inputSchema: {
@@ -172,10 +138,6 @@ export class MCPServer extends EventEmitter {
                 switch (name) {
                     case 'show_popup':
                         return await this.handleShowPopup(args);
-                    case 'get_user_response':
-                        return await this.handleGetUserResponse(args);
-                    case 'close_popup':
-                        return await this.handleClosePopup(args);
                     case 'list_active_popups':
                         return await this.handleListActivePopups(args);
                     default:
@@ -231,6 +193,8 @@ export class MCPServer extends EventEmitter {
             textContent = `User clicked: ${result.button}`;
         } else if (result.input) {
             textContent = `User entered: ${result.input}`;
+        } else if (result.customText) {
+            textContent = `User entered custom text: ${result.customText}`;
         } else {
             textContent = 'Popup closed';
         }
@@ -241,58 +205,6 @@ export class MCPServer extends EventEmitter {
         };
     }
 
-    private async handleGetUserResponse(params: any): Promise<{ content: Array<{ type: 'text', text: string }>, structuredContent?: any }> {
-        this.logger.debug('Handling get_user_response request', params);
-
-        const timeout = params.timeout ?? this.config.popupTimeout;
-
-        let result;
-        if (params.popupId) {
-            // Wait for specific popup
-            result = await this.popupManager.waitForPopupResponse(params.popupId, timeout);
-        } else {
-            // Wait for any popup response
-            result = await this.popupManager.waitForAnyPopupResponse(timeout);
-        }
-
-        // Format according to MCP protocol
-        let textContent = 'User response: ';
-        if (result.timedOut) {
-            textContent = 'Popup timed out';
-        } else if (result.cancelled) {
-            textContent = 'Popup was cancelled';
-        } else if (result.button) {
-            textContent = `User clicked: ${result.button}`;
-        } else if (result.input) {
-            textContent = `User entered: ${result.input}`;
-        } else {
-            textContent = 'Popup closed';
-        }
-
-        return {
-            content: [{ type: 'text', text: textContent }],
-            structuredContent: result
-        };
-    }
-
-    private async handleClosePopup(params: any): Promise<{ content: Array<{ type: 'text', text: string }>, structuredContent?: { closed: string[] } }> {
-        this.logger.debug('Handling close_popup request', params);
-
-        let closedIds: string[];
-        if (params.popupId) {
-            // Close specific popup
-            await this.popupManager.closePopup(params.popupId);
-            closedIds = [params.popupId];
-        } else {
-            // Close all popups for instance or all
-            closedIds = await this.popupManager.closeAllPopups(params.vscodeInstanceId);
-        }
-
-        return {
-            content: [{ type: 'text', text: `Closed ${closedIds.length} popup(s): ${closedIds.join(', ')}` }],
-            structuredContent: { closed: closedIds }
-        };
-    }
 
     private async handleListActivePopups(params: any): Promise<{ content: Array<{ type: 'text', text: string }>, structuredContent?: { popups: any[] } }> {
         this.logger.debug('Handling list_active_popups request', params);

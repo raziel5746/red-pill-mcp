@@ -20,6 +20,12 @@
             // vscode object might not be available yet
         }
 
+        // Ensure custom text area is hidden initially
+        const customTextArea = document.getElementById('customTextArea');
+        if (customTextArea) {
+            customTextArea.style.display = 'none';
+        }
+
         // Set up event listeners
         setupEventListeners();
 
@@ -49,21 +55,38 @@
             closeButton.addEventListener('click', handleClose);
         }
 
-        // Action buttons
-        const buttons = document.querySelectorAll('.popup-button');
+        // Action buttons (excluding custom text button to avoid conflicts)
+        const buttons = document.querySelectorAll('.popup-button:not(#customTextButton)');
         try {
             vscode.postMessage({
                 type: 'debug',
-                message: `Found ${buttons.length} popup buttons`,
+                message: `Found ${buttons.length} popup buttons (excluding custom text button)`,
                 buttonIds: Array.from(buttons).map(b => b.dataset.buttonId)
             });
         } catch (e) {
             // Ignore errors
         }
-        
+
         buttons.forEach((button, index) => {
             button.addEventListener('click', handleButtonClick);
         });
+
+        // Custom text functionality
+        const customTextButton = document.getElementById('customTextButton');
+        const customTextArea = document.getElementById('customTextArea');
+        const customTextInput = document.getElementById('customTextInput');
+        const sendCustomTextButton = document.getElementById('sendCustomTextButton');
+        const cancelCustomTextButton = document.getElementById('cancelCustomTextButton');
+
+        if (customTextButton) {
+            customTextButton.addEventListener('click', handleCustomTextToggle);
+        }
+        if (sendCustomTextButton) {
+            sendCustomTextButton.addEventListener('click', handleSendCustomText);
+        }
+        if (cancelCustomTextButton) {
+            cancelCustomTextButton.addEventListener('click', handleCancelCustomText);
+        }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', handleKeyDown);
@@ -83,6 +106,12 @@
         const button = event.currentTarget;
         const buttonId = button.dataset.buttonId;
         const action = button.dataset.action;
+
+        // Handle custom text button specially
+        if (action === 'custom-text') {
+            handleCustomTextToggle();
+            return;
+        }
 
         // Send debug message about button click
         try {
@@ -132,6 +161,133 @@
         }, 1000);
     }
 
+    function handleCustomTextToggle() {
+        // Debug logging at start
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: 'handleCustomTextToggle called'
+            });
+        } catch (e) {
+            console.log('handleCustomTextToggle called');
+        }
+
+        const customTextArea = document.getElementById('customTextArea');
+        const customTextInput = document.getElementById('customTextInput');
+        const regularButtons = document.querySelectorAll('.popup-actions .popup-button:not(#customTextButton)');
+
+        // Debug element existence
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: `Elements found - customTextArea: ${!!customTextArea}, customTextInput: ${!!customTextInput}, regularButtons: ${regularButtons.length}`
+            });
+        } catch (e) {
+            console.log(`Elements found - customTextArea: ${!!customTextArea}, customTextInput: ${!!customTextInput}, regularButtons: ${regularButtons.length}`);
+        }
+
+        if (customTextArea && customTextInput) {
+            // More robust visibility check - check both computed style and inline style
+            const computedStyle = window.getComputedStyle(customTextArea);
+            const isVisible = computedStyle.display !== 'none' && customTextArea.style.display !== 'none';
+
+            // Debug logging
+            try {
+                vscode.postMessage({
+                    type: 'debug',
+                    message: `Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextArea.style.display}'`
+                });
+            } catch (e) {
+                console.log(`Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextArea.style.display}'`);
+            }
+
+            if (isVisible) {
+                // Hide custom text area and show regular buttons
+                customTextArea.style.display = 'none';
+                regularButtons.forEach(button => {
+                    button.style.display = '';
+                });
+                try {
+                    vscode.postMessage({
+                        type: 'debug',
+                        message: 'Custom text area hidden, regular buttons shown'
+                    });
+                } catch (e) {
+                    console.log('Custom text area hidden, regular buttons shown');
+                }
+            } else {
+                // Show custom text area and hide regular buttons (but keep custom text button)
+                customTextArea.style.display = 'block';
+                regularButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+                try {
+                    vscode.postMessage({
+                        type: 'debug',
+                        message: 'Custom text area shown, regular buttons hidden'
+                    });
+                } catch (e) {
+                    console.log('Custom text area shown, regular buttons hidden');
+                }
+                // Small delay to ensure DOM is updated before focusing
+                setTimeout(() => {
+                    customTextInput.focus();
+                }, 10);
+            }
+        } else {
+            try {
+                vscode.postMessage({
+                    type: 'debug',
+                    message: 'Required elements not found!'
+                });
+            } catch (e) {
+                console.log('Required elements not found!');
+            }
+        }
+    }
+
+    function handleSendCustomText() {
+        if (isDisposed) return;
+
+        const customTextInput = document.getElementById('customTextInput');
+        const customText = customTextInput ? customTextInput.value.trim() : '';
+
+        if (!customText) {
+            // Show a brief error indication
+            if (customTextInput) {
+                customTextInput.style.borderColor = '#ff4444';
+                setTimeout(() => {
+                    customTextInput.style.borderColor = '';
+                }, 1000);
+            }
+            return;
+        }
+
+        const responseData = {
+            type: 'button_click',
+            buttonId: 'custom_text',
+            customText: customText,
+            timestamp: Date.now(),
+            data: gatherFormData()
+        };
+
+        try {
+            vscode.postMessage({
+                type: 'debug',
+                message: `Sending custom text: ${customText}`,
+                responseData: responseData
+            });
+        } catch (e) {
+            // Ignore errors
+        }
+
+        sendMessage(responseData);
+    }
+
+    function handleCancelCustomText() {
+        handleCustomTextToggle(); // This will hide the custom text area and show regular buttons
+    }
+
     function handleClose() {
         if (isDisposed) return;
 
@@ -154,7 +310,7 @@
                 event.preventDefault();
                 handleClose();
                 break;
-            
+
             case 'Enter':
                 // If focus is on a button, trigger click
                 if (document.activeElement && document.activeElement.classList.contains('popup-button')) {
@@ -190,10 +346,10 @@
         const focusableElements = document.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        
+
         const focusableArray = Array.from(focusableElements);
         const currentIndex = focusableArray.indexOf(document.activeElement);
-        
+
         if (event.shiftKey) {
             // Shift+Tab - go backwards
             const prevIndex = currentIndex <= 0 ? focusableArray.length - 1 : currentIndex - 1;
@@ -203,7 +359,7 @@
             const nextIndex = currentIndex >= focusableArray.length - 1 ? 0 : currentIndex + 1;
             focusableArray[nextIndex]?.focus();
         }
-        
+
         event.preventDefault();
     }
 
@@ -211,12 +367,12 @@
         const buttons = document.querySelectorAll('.popup-button');
         const buttonsArray = Array.from(buttons);
         const currentIndex = buttonsArray.indexOf(document.activeElement);
-        
+
         if (currentIndex !== -1) {
-            const newIndex = forward 
+            const newIndex = forward
                 ? (currentIndex + 1) % buttonsArray.length
                 : (currentIndex - 1 + buttonsArray.length) % buttonsArray.length;
-            
+
             buttonsArray[newIndex]?.focus();
         }
     }
@@ -224,29 +380,29 @@
     function startTimeoutCountdown() {
         remainingTime = Math.ceil(popupConfig.timeout / 1000);
         const timeoutDisplay = document.getElementById('timeoutDisplay');
-        
+
         if (!timeoutDisplay) return;
 
         timeoutInterval = setInterval(() => {
             remainingTime--;
             timeoutDisplay.textContent = `Timeout: ${remainingTime}s`;
-            
+
             // Add warning class when less than 10 seconds remain
             if (remainingTime <= 10) {
                 timeoutDisplay.classList.add('warning');
             }
-            
+
             // Auto-close when timeout reaches 0
             if (remainingTime <= 0) {
                 clearInterval(timeoutInterval);
                 console.log('Popup timed out');
-                
+
                 const responseData = {
                     type: 'timeout',
                     timestamp: Date.now(),
                     dismissed: true
                 };
-                
+
                 sendMessage(responseData);
             }
         }, 1000);
@@ -255,17 +411,17 @@
     function focusFirstInteractiveElement() {
         // Try to focus the primary button first
         let elementToFocus = document.querySelector('.popup-button--primary');
-        
+
         // If no primary button, focus the first button
         if (!elementToFocus) {
             elementToFocus = document.querySelector('.popup-button');
         }
-        
+
         // If no buttons, focus the close button
         if (!elementToFocus) {
             elementToFocus = document.getElementById('closeButton');
         }
-        
+
         if (elementToFocus) {
             elementToFocus.focus();
         }
@@ -274,7 +430,7 @@
     function gatherFormData() {
         // Collect any form data from the popup
         const data = {};
-        
+
         // Get all input elements
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
@@ -282,7 +438,7 @@
                 data[input.name] = input.value;
             }
         });
-        
+
         // Get any custom data attributes
         const customElements = document.querySelectorAll('[data-custom-value]');
         customElements.forEach(element => {
@@ -292,7 +448,7 @@
                 data[key] = value;
             }
         });
-        
+
         return Object.keys(data).length > 0 ? data : undefined;
     }
 
@@ -302,13 +458,13 @@
         try {
             console.log('Sending message to extension:', data);
             vscode.postMessage(data);
-            
+
             // Mark as disposed to prevent further interactions
             isDisposed = true;
-            
+
             // Clean up
             cleanup();
-            
+
         } catch (error) {
             console.error('Failed to send message:', error);
         }
@@ -323,13 +479,13 @@
             clearInterval(timeoutInterval);
             timeoutInterval = null;
         }
-        
+
         // Disable all interactive elements
         const interactiveElements = document.querySelectorAll('button, input, textarea, select');
         interactiveElements.forEach(element => {
             element.disabled = true;
         });
-        
+
         console.log('Popup cleaned up');
     }
 
@@ -360,7 +516,7 @@
     // Error handling
     window.addEventListener('error', (event) => {
         console.error('Popup error:', event.error);
-        
+
         if (!isDisposed) {
             const errorData = {
                 type: 'error',
@@ -373,7 +529,7 @@
                 },
                 timestamp: Date.now()
             };
-            
+
             try {
                 vscode.postMessage(errorData);
             } catch (e) {
@@ -396,14 +552,14 @@
                 sendMessage({ type: 'custom', data, timestamp: Date.now() });
             }
         },
-        
+
         updateContent: function(newContent) {
             const messageElement = document.querySelector('.popup-message');
             if (messageElement && !isDisposed) {
                 messageElement.innerHTML = newContent;
             }
         },
-        
+
         addButton: function(buttonConfig) {
             const actionsContainer = document.querySelector('.popup-actions');
             if (actionsContainer && !isDisposed) {
