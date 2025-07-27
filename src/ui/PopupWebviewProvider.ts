@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { PopupConfig } from '../types';
 import { Logger } from '../utils/Logger';
+import { micromark } from 'micromark';
 
 export class PopupWebviewProvider {
     private context: vscode.ExtensionContext;
@@ -9,7 +10,7 @@ export class PopupWebviewProvider {
 
     constructor(context: vscode.ExtensionContext, config: PopupConfig, logger: Logger) {
         this.context = context;
-        this.config = config;
+        this.config = { ...config, type: config.type || 'question' };
         this.logger = logger;
     }
 
@@ -45,7 +46,7 @@ export class PopupWebviewProvider {
         // Generate buttons HTML (not used for input type)
         let buttonsHtml = '';
         let isQuestionDefault = false;
-        
+
         if (this.config.type !== 'input') {
             if (this.config.buttons && this.config.buttons.length > 0) {
                 buttonsHtml = this.config.buttons.map(button => {
@@ -209,25 +210,8 @@ export class PopupWebviewProvider {
     }
 
     private formatContent(content: string): string {
-        // Basic markdown-like formatting
-        let formatted = this.escapeHtml(content);
-
-        // Convert line breaks
-        formatted = formatted.replace(/\n/g, '<br>');
-
-        // Convert **bold** to <strong>
-        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-        // Convert *italic* to <em>
-        formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-        // Convert `code` to <code>
-        formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
-
-        // Convert [link](url) to <a>
-        formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-        return formatted;
+        // Use micromark for proper Markdown parsing
+        return micromark(content);
     }
 
     private escapeHtml(text: string): string {

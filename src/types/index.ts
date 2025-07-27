@@ -55,7 +55,7 @@ export type PopupType = z.infer<typeof PopupTypeSchema>;
 export const PopupOptionsSchema = z.object({
     title: z.string(),
     message: z.string(),
-    type: PopupTypeSchema,
+    type: PopupTypeSchema.default('question'),
     buttons: z.array(z.string()).optional(),
     defaultButton: z.string().optional(),
     timeout: z.number().optional(),

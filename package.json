@@ -123,6 +123,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
+    "micromark": "^4.0.2",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   }
