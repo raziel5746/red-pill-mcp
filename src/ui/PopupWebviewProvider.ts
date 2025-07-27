@@ -43,17 +43,45 @@ export class PopupWebviewProvider {
         );
 
         // Generate buttons HTML (not used for input type)
-        const buttonsHtml = this.config.type !== 'input' ? (this.config.buttons?.map(button => {
-            return `
-            <button
-                class="popup-button popup-button--${button.style || 'secondary'}"
-                data-button-id="${button.id}"
-                data-action="${button.action || ''}"
-            >
-                ${this.escapeHtml(button.label)}
-            </button>
-        `;
-        }).join('') || '') : '';
+        let buttonsHtml = '';
+        let isQuestionDefault = false;
+        
+        if (this.config.type !== 'input') {
+            if (this.config.buttons && this.config.buttons.length > 0) {
+                buttonsHtml = this.config.buttons.map(button => {
+                    return `
+                    <button
+                        class="popup-button popup-button--${button.style || 'primary'}"
+                        data-button-id="${button.id}"
+                        data-action="${button.action || ''}"
+                    >
+                        ${this.escapeHtml(button.label)}
+                    </button>
+                `;
+                }).join('');
+            } else if (this.config.type === 'question') {
+                // Default buttons for question type when no buttons are provided
+                isQuestionDefault = true;
+                buttonsHtml = `
+                    <div class="default-buttons">
+                        <button
+                            class="popup-button popup-button--secondary"
+                            data-button-id="cancel"
+                            data-action="cancel"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            class="popup-button popup-button--primary"
+                            data-button-id="ok"
+                            data-action="ok"
+                        >
+                            OK
+                        </button>
+                    </div>
+                `;
+            }
+        }
 
         return `
         <!DOCTYPE html>
@@ -98,54 +126,55 @@ export class PopupWebviewProvider {
                     ` : ''}
                 </div>
 
-                <div class="popup-actions">
+                <div class="popup-actions${this.config.type === 'input' ? ' input-actions' : (isQuestionDefault ? ' question-default' : '')}">
                     ${buttonsHtml}
-                    ${this.config.type !== 'input' ? `
-                        <button
-                            class="popup-button popup-button--secondary"
-                            id="customTextButton"
-                            data-action="custom-text"
-                        >
-                            Custom text
-                        </button>
-                    ` : ''}
                     ${this.config.type === 'input' ? `
-                        <button
-                            class="popup-button popup-button--primary"
-                            id="sendInputButton"
-                        >
-                            Send
-                        </button>
                         <button
                             class="popup-button popup-button--secondary"
                             id="cancelInputButton"
                         >
                             Cancel
                         </button>
+                        <button
+                            class="popup-button popup-button--primary"
+                            id="sendInputButton"
+                        >
+                            Send
+                        </button>
                     ` : ''}
                 </div>
 
                 ${this.config.type !== 'input' ? `
-                <div class="popup-custom-text" id="customTextArea" style="display: none;">
+                <div class="popup-custom-text">
                     <textarea
                         id="customTextInput"
                         placeholder="Enter your custom response here..."
                         rows="3"
                         class="popup-textarea"
+                        style="display: none;"
                     ></textarea>
                     <div class="popup-custom-actions">
                         <button
-                            class="popup-button popup-button--primary"
-                            id="sendCustomTextButton"
+                            class="popup-button popup-button--custom-text"
+                            id="customTextButton"
+                            data-action="custom-text"
                         >
-                            Send
+                            Custom text
                         </button>
-                        <button
-                            class="popup-button popup-button--secondary"
-                            id="cancelCustomTextButton"
-                        >
-                            Cancel
-                        </button>
+                        <div class="custom-action-buttons" id="customActionButtons" style="display: none;">
+                            <button
+                                class="popup-button popup-button--secondary"
+                                id="cancelCustomTextButton"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                class="popup-button popup-button--primary"
+                                id="sendCustomTextButton"
+                            >
+                                Send
+                            </button>
+                        </div>
                     </div>
                 </div>` : ''}
 

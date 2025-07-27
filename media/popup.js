@@ -21,10 +21,14 @@
             // vscode object might not be available yet
         }
 
-        // Ensure custom text area is hidden initially
-        const customTextArea = document.getElementById('customTextArea');
-        if (customTextArea) {
-            customTextArea.style.display = 'none';
+        // Ensure custom text elements are hidden initially
+        const customTextInput = document.getElementById('customTextInput');
+        const customActionButtons = document.getElementById('customActionButtons');
+        if (customTextInput) {
+            customTextInput.style.display = 'none';
+        }
+        if (customActionButtons) {
+            customActionButtons.style.display = 'none';
         }
 
         // Set up event listeners
@@ -201,62 +205,57 @@
             console.log('handleCustomTextToggle called');
         }
 
-        const customTextArea = document.getElementById('customTextArea');
         const customTextInput = document.getElementById('customTextInput');
-        const regularButtons = document.querySelectorAll('.popup-actions .popup-button:not(#customTextButton)');
+        const customActionButtons = document.getElementById('customActionButtons');
 
         // Debug element existence
         try {
             vscode.postMessage({
                 type: 'debug',
-                message: `Elements found - customTextArea: ${!!customTextArea}, customTextInput: ${!!customTextInput}, regularButtons: ${regularButtons.length}`
+                message: `Elements found - customTextInput: ${!!customTextInput}, customActionButtons: ${!!customActionButtons}`
             });
         } catch (e) {
-            console.log(`Elements found - customTextArea: ${!!customTextArea}, customTextInput: ${!!customTextInput}, regularButtons: ${regularButtons.length}`);
+            console.log(`Elements found - customTextInput: ${!!customTextInput}, customActionButtons: ${!!customActionButtons}`);
         }
 
-        if (customTextArea && customTextInput) {
-            // More robust visibility check - check both computed style and inline style
-            const computedStyle = window.getComputedStyle(customTextArea);
-            const isVisible = computedStyle.display !== 'none' && customTextArea.style.display !== 'none';
+        if (customTextInput && customActionButtons) {
+            // Check if textarea is currently visible
+            const computedStyle = window.getComputedStyle(customTextInput);
+            const isVisible = computedStyle.display !== 'none' && customTextInput.style.display !== 'none';
 
             // Debug logging
             try {
                 vscode.postMessage({
                     type: 'debug',
-                    message: `Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextArea.style.display}'`
+                    message: `Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextInput.style.display}'`
                 });
             } catch (e) {
-                console.log(`Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextArea.style.display}'`);
+                console.log(`Toggle clicked - isVisible: ${isVisible}, computedStyle.display: ${computedStyle.display}, inline style: '${customTextInput.style.display}'`);
             }
 
             if (isVisible) {
-                // Hide custom text area and show regular buttons
-                customTextArea.style.display = 'none';
-                regularButtons.forEach(button => {
-                    button.style.display = '';
-                });
+                // Hide custom text input and action buttons (option buttons stay visible)
+                customTextInput.style.display = 'none';
+                customActionButtons.style.display = 'none';
                 try {
                     vscode.postMessage({
                         type: 'debug',
-                        message: 'Custom text area hidden, regular buttons shown'
+                        message: 'Custom text input hidden, option buttons remain visible'
                     });
                 } catch (e) {
-                    console.log('Custom text area hidden, regular buttons shown');
+                    console.log('Custom text input hidden, option buttons remain visible');
                 }
             } else {
-                // Show custom text area and hide regular buttons (but keep custom text button)
-                customTextArea.style.display = 'block';
-                regularButtons.forEach(button => {
-                    button.style.display = 'none';
-                });
+                // Show custom text input and action buttons (option buttons stay visible)
+                customTextInput.style.display = 'block';
+                customActionButtons.style.display = 'flex';
                 try {
                     vscode.postMessage({
                         type: 'debug',
-                        message: 'Custom text area shown, regular buttons hidden'
+                        message: 'Custom text input shown, option buttons remain visible'
                     });
                 } catch (e) {
-                    console.log('Custom text area shown, regular buttons hidden');
+                    console.log('Custom text input shown, option buttons remain visible');
                 }
                 // Small delay to ensure DOM is updated before focusing
                 setTimeout(() => {
@@ -434,23 +433,26 @@
     function startTimeoutCountdown() {
         remainingTime = Math.ceil(popupConfig.timeout / 1000);
         const timeoutDisplay = document.getElementById('timeoutDisplay');
+        const popupFooter = document.querySelector('.popup-footer');
         if (!timeoutDisplay) return;
 
-        // Click to pause/resume
-        timeoutDisplay.addEventListener('click', () => {
-            if (!timeoutInterval) return; // nothing to pause if no interval
-            if (countdownPaused) {
-                // resume
-                countdownPaused = false;
-                timeoutDisplay.classList.remove('paused');
-                timeoutDisplay.textContent = `Timeout: ${remainingTime}s`; // reset text
-            } else {
-                // pause
-                countdownPaused = true;
-                timeoutDisplay.classList.add('paused');
-                timeoutDisplay.textContent = `Timeout: ${remainingTime}s ⏸`;
-            }
-        });
+        // Click entire footer to pause/resume
+        if (popupFooter) {
+            popupFooter.addEventListener('click', () => {
+                if (!timeoutInterval) return; // nothing to pause if no interval
+                if (countdownPaused) {
+                    // resume
+                    countdownPaused = false;
+                    timeoutDisplay.classList.remove('paused');
+                    timeoutDisplay.innerHTML = `Timeout: ${remainingTime}s`; // reset text
+                } else {
+                    // pause
+                    countdownPaused = true;
+                    timeoutDisplay.classList.add('paused');
+                    timeoutDisplay.innerHTML = `<span class="pause-icon">⏸</span>Timeout: ${remainingTime}s`;
+                }
+            });
+        }
 
         timeoutInterval = setInterval(() => {
             if (countdownPaused) return; // skip tick while paused

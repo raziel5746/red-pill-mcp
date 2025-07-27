@@ -1,16 +1,18 @@
-/* VS Code Theme-aware Popup Styles */
+/* Modern Interactive MCP-inspired Popup Styles */
 :root {
-    --popup-bg: var(--vscode-editor-background, #1e1e1e);
-    --popup-border: var(--vscode-panel-border, #2d2d30);
-    --popup-text: var(--vscode-editor-foreground, #cccccc);
-    --popup-header-bg: var(--vscode-titleBar-activeBackground, #2d2d30);
-    --popup-button-primary: var(--vscode-button-background, #0e639c);
-    --popup-button-primary-hover: var(--vscode-button-hoverBackground, #1177bb);
-    --popup-button-secondary: var(--vscode-button-secondaryBackground, #3c3c3c);
-    --popup-button-secondary-hover: var(--vscode-button-secondaryHoverBackground, #464647);
-    --popup-button-danger: var(--vscode-errorForeground, #f14c4c);
-    --popup-shadow: rgba(0, 0, 0, 0.3);
-    --popup-radius: 6px;
+    --popup-bg: #1e1e1e;
+    --popup-border: #3c3c3c;
+    --popup-text: #cccccc;
+    --popup-header-bg: #2d2d30;
+    --popup-button-primary: #0e639c;
+    --popup-button-primary-hover: #1177bb;
+    --popup-button-secondary: transparent;
+    --popup-button-secondary-hover: #464647;
+    --popup-button-danger: #f14c4c;
+    --popup-shadow: rgba(0, 0, 0, 0.4);
+    --popup-radius: 8px;
+    --popup-backdrop: rgba(0, 0, 0, 0.8);
+    --popup-glow-color: rgba(14, 99, 156, 0.5);
 }
 
 * {
@@ -20,27 +22,29 @@
 }
 
 body {
-    font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
-    font-size: var(--vscode-font-size, 13px);
-    line-height: 1.4;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
     color: var(--popup-text);
-    background: var(--popup-bg);
+    background: var(--popup-backdrop);
     padding: 20px;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
 }
 
 .popup-container {
-    max-width: 600px;
+    max-width: 450px;
     width: 100%;
     background: var(--popup-bg);
     border: 1px solid var(--popup-border);
     border-radius: var(--popup-radius);
     box-shadow: 0 8px 32px var(--popup-shadow);
     overflow: hidden;
-    animation: popup-fade-in 0.3s ease-out;
+    animation: slideIn 0.2s ease-out, glow 3s ease-in-out infinite;
+    text-align: left;
 }
 
 @keyframes popup-fade-in {
@@ -55,17 +59,43 @@ body {
     }
 }
 
+/* Subtle attention-grabbing glow effect */
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 8px 32px var(--popup-shadow);
+        border-color: var(--popup-border);
+    }
+
+    50% {
+        box-shadow: 0 8px 32px var(--popup-glow-color);
+        border-color: rgba(14, 99, 156, 0.8);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .popup-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    background: var(--popup-header-bg);
-    border-bottom: 1px solid var(--popup-border);
+    padding: 20px 24px 16px 24px;
+    background: var(--popup-bg);
 }
 
 .popup-title {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     margin: 0;
     color: var(--popup-text);
@@ -92,50 +122,53 @@ body {
 
 .popup-close:hover {
     background: var(--popup-button-secondary-hover);
+    transform: scale(1.1);
+    transition: all 0.2s ease;
 }
 
 .popup-content {
-    padding: 20px;
+    padding: 0 24px 16px 24px;
 }
 
 .popup-message {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     line-height: 1.6;
+    font-size: 14px;
 }
 
 .popup-message strong {
     font-weight: 600;
-    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+    color: var(--popup-text);
 }
 
 .popup-message em {
     font-style: italic;
-    color: var(--vscode-descriptionForeground, var(--popup-text));
+    color: var(--popup-text);
+    opacity: 0.9;
 }
 
 .popup-message code {
-    background: var(--vscode-textCodeBlock-background, rgba(255, 255, 255, 0.1));
-    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--popup-text);
     padding: 2px 6px;
     border-radius: 3px;
-    font-family: var(--vscode-editor-font-family, 'Monaco', 'Consolas', monospace);
+    font-family: 'Monaco', 'Consolas', monospace;
     font-size: 0.9em;
 }
 
 .popup-message a {
-    color: var(--vscode-textLink-foreground, #3794ff);
+    color: #3794ff;
     text-decoration: none;
 }
 
 .popup-message a:hover {
-    color: var(--vscode-textLink-activeForeground, #4daafc);
+    color: #4daafc;
     text-decoration: underline;
 }
 
 .popup-metadata {
-    margin-top: 16px;
+    margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid var(--popup-border);
 }
 
 .popup-metadata details {
@@ -145,15 +178,16 @@ body {
 .popup-metadata summary {
     font-weight: 500;
     padding: 8px 0;
-    color: var(--vscode-descriptionForeground, var(--popup-text));
+    color: var(--popup-text);
+    opacity: 0.9;
 }
 
 .popup-metadata pre {
-    background: var(--vscode-textCodeBlock-background, rgba(255, 255, 255, 0.05));
-    color: var(--vscode-textPreformat-foreground, var(--popup-text));
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--popup-text);
     padding: 12px;
     border-radius: 4px;
-    font-family: var(--vscode-editor-font-family, monospace);
+    font-family: monospace;
     font-size: 0.85em;
     overflow-x: auto;
     margin-top: 8px;
@@ -161,54 +195,90 @@ body {
 }
 
 .popup-actions {
-    padding: 16px 20px;
-    background: var(--vscode-panel-background, var(--popup-bg));
-    border-top: 1px solid var(--popup-border);
+    padding: 16px 24px;
+    background: var(--popup-bg);
     display: flex;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+}
+
+/* Match input modal spacing to custom text area */
+.popup-actions.input-actions {
+    padding-top: 0;
+    margin-top: 12px;
+}
+
+/* Special layout for input modal buttons (horizontal) */
+.popup-actions.input-actions {
+    flex-direction: row;
     justify-content: flex-end;
-    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Special layout for question default buttons (horizontal) */
+.popup-actions.question-default {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+/* Default buttons container for question default layout */
+.popup-actions.question-default .default-buttons {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    justify-content: center;
+}
+
+.popup-actions.question-default .default-buttons .popup-button {
+    flex: 1;
+    max-width: 50%;
+    min-width: 120px;
+    margin: 0 8px;
 }
 
 .popup-button {
-    padding: 8px 16px;
+    padding: 10px 16px;
     border: none;
     border-radius: 4px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: 80px;
+    min-width: 120px;
     position: relative;
     overflow: hidden;
+    text-align: center;
 }
 
 .popup-button:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
+    cursor: default;
 }
 
-.popup-button::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transition: width 0.3s, height 0.3s;
-    transform: translate(-50%, -50%);
+.popup-button:active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transition: none !important;
+    transform: none !important;
 }
 
-.popup-button:active::before {
-    width: 100px;
-    height: 100px;
+.popup-button--primary:active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.popup-button--secondary:active {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.popup-button--custom-text:active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .popup-button--primary {
     background: var(--popup-button-primary);
-    color: var(--vscode-button-foreground, #ffffff);
+    color: #ffffff !important;
 }
 
 .popup-button--primary:hover:not(:disabled) {
@@ -219,12 +289,14 @@ body {
 
 .popup-button--secondary {
     background: var(--popup-button-secondary);
-    color: var(--vscode-button-secondaryForeground, var(--popup-text));
+    color: var(--popup-text);
+    border: 1px solid var(--popup-border);
 }
 
 .popup-button--secondary:hover:not(:disabled) {
     background: var(--popup-button-secondary-hover);
     transform: translateY(-1px);
+    border-color: var(--popup-button-primary);
 }
 
 .popup-button--danger {
@@ -240,23 +312,34 @@ body {
 }
 
 .popup-footer {
-    padding: 12px 20px;
-    background: var(--vscode-statusBar-background, #007acc);
-    color: var(--vscode-statusBar-foreground, #ffffff);
+    padding: 4px 8px;
+    background: var(--popup-button-primary);
+    color: #ffffff;
     font-size: 11px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.popup-footer:hover {
+    background: var(--popup-button-primary-hover);
 }
 
 .popup-id {
-    font-family: var(--vscode-editor-font-family, monospace);
+    font-family: monospace;
     opacity: 0.8;
 }
 
 .popup-timeout {
     font-weight: 500;
-    cursor: default;
+    cursor: pointer;
+    color: #ffffff;
+    position: relative;
+    padding-left: 20px;
 }
 
 .popup-timeout.warning {
@@ -264,11 +347,33 @@ body {
     animation: pulse 1s ease-in-out infinite;
 }
 
-.popup-timeout,
 #timeoutDisplay.paused {
-    opacity: 0.6;
     cursor: pointer;
+    color: #ffffffbb;
+    /* animation: pausedPulse 1.5s ease-in-out infinite; */
 }
+
+.popup-timeout .pause-icon {
+    font-size: 18px;
+    position: absolute;
+    left: 0;
+    top: -3px;
+    /* transform: translateY(-50%); */
+    line-height: 1;
+    margin: 0;
+}
+
+/* @keyframes pausedPulse {
+
+    0%,
+    100% {
+        color: #ffffff;
+    }
+
+    50% {
+        color: rgba(255, 255, 255, 0.6);
+    }
+} */
 
 @keyframes pulse {
 
@@ -339,8 +444,7 @@ body {
 /* Focus styles for accessibility */
 .popup-button:focus,
 .popup-close:focus {
-    outline: 2px solid var(--vscode-focusBorder, #007fd4);
-    outline-offset: 2px;
+    outline: none;
 }
 
 /* Loading state */
@@ -371,10 +475,31 @@ body {
 
 /* Custom text area styles */
 .popup-custom-text {
-    padding: 16px 20px;
-    background: var(--vscode-panel-background, var(--popup-bg));
-    border-top: 1px solid var(--popup-border);
+    padding: 16px 24px;
+    background: var(--popup-bg);
+    margin-top: 8px;
 }
+
+/* Custom text button - styled differently from main buttons */
+.popup-button--custom-text {
+    background: transparent;
+    color: var(--popup-text);
+    border: 1px solid var(--popup-border);
+    font-size: 12px;
+    padding: 6px 12px;
+    min-width: auto;
+    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.popup-button--custom-text:hover:not(:disabled) {
+    background: var(--popup-border);
+    border-color: var(--popup-button-primary);
+    transform: none;
+}
+
 
 /* Removed problematic CSS rule that was interfering with JavaScript toggle */
 
@@ -384,30 +509,36 @@ body {
     padding: 12px;
     border: 1px solid var(--popup-border);
     border-radius: 4px;
-    background: var(--vscode-input-background, var(--popup-bg));
-    color: var(--vscode-input-foreground, var(--popup-text));
-    font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
-    font-size: var(--vscode-font-size, 13px);
-    line-height: 1.4;
+    background: #3c3c3c;
+    color: var(--popup-text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
     resize: vertical;
     transition: border-color 0.2s ease;
 }
 
 .popup-textarea:focus {
     outline: none;
-    border-color: var(--vscode-focusBorder, #007fd4);
-    box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007fd4);
+    border-color: var(--popup-button-primary);
+    box-shadow: 0 0 0 2px rgba(14, 99, 156, 0.2);
 }
 
 .popup-textarea::placeholder {
-    color: var(--vscode-input-placeholderForeground, rgba(204, 204, 204, 0.6));
+    color: rgba(204, 204, 204, 0.6);
 }
 
 .popup-custom-actions {
     margin-top: 12px;
     display: flex;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-action-buttons {
+    display: flex;
+    gap: 8px;
 }
 
 /* Responsive adjustments for custom text area */
