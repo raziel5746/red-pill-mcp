@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { spawn } from 'child_process';
 import WebSocket from 'ws';
 import { PopupManager } from './managers/PopupManager';
 import { ConfigManager } from './managers/ConfigManager';

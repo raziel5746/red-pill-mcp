@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { spawn } from 'child_process';
 import { v4 as uuidv4 } from 'uuid';
 import { PopupConfig, PopupResponse, PopupInstance, ExtensionState } from '../types';
 import { Logger } from '../utils/Logger';
@@ -58,6 +61,9 @@ export class PopupManager {
 
             // Store the instance
             this.state.activePopups.set(config.id, instance);
+
+            // Play chime sound
+            this.playChimeSound();
 
             this.logger.debug(`Popup created: ${config.id}`);
             return config.id;
@@ -238,6 +244,48 @@ export class PopupManager {
 
         } catch (error) {
             this.logger.error(`Error during popup cleanup for ${popupId}:`, error);
+        }
+    }
+
+    private playChimeSound(): void {
+        try {
+            const config = vscode.workspace.getConfiguration('redPillMcp');
+            if (!config.get<boolean>('chimeEnabled', true)) return;
+            
+            const soundPath = path.join(this.context.extensionPath, 'media', 'chime.wav');
+            this.logger.debug(`[Sound] Attempting playback at: ${soundPath}`);
+            
+            if (!fs.existsSync(soundPath)) {
+                this.logger.warn('[Sound] Error: File not found! Check if media/chime.wav exists.');
+                return;
+            }
+            
+            let command: string;
+            let args: string[] = [];
+            
+            if (process.platform === 'win32') {
+                command = 'powershell';
+                args = ['-NoProfile', '-c', `(New-Object Media.SoundPlayer '${soundPath.replace(/\//g, '\\')}').PlaySync()`];
+            } else if (process.platform === 'darwin') {
+                command = 'afplay';
+                args = [soundPath];
+            } else {
+                command = 'aplay';
+                args = [soundPath];
+            }
+            
+            this.logger.debug(`[Sound] Spawning: ${command} ${args.join(' ')}`);
+            const proc = spawn(command, args, { shell: true });
+            
+            proc.on('error', (err) => {
+                this.logger.error(`[Sound] Playback error: ${err.message}`);
+            });
+            
+            proc.on('close', (code) => {
+                this.logger.debug(`[Sound] Process closed with code ${code}`);
+            });
+        } catch (error) {
+            this.logger.error('[Sound] Error playing chime:', error);
         }
     }
 

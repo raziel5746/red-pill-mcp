@@ -325,6 +325,7 @@
         const responseData = {
             type: 'button_click',
             buttonId: 'input',
+            customText: text,
             data: { inputValue: text },
             timestamp: Date.now()
         };

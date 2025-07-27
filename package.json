@@ -77,6 +77,11 @@
           ],
           "default": "info",
           "description": "Logging level"
+        },
+        "redPillMcp.chimeEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play chime sound when popups are displayed"
         }
       }
     }
