@@ -46,13 +46,6 @@ export class PopupManager {
                 createdAt: Date.now()
             };
 
-            // Set up timeout if specified
-            if (config.timeout && config.timeout > 0) {
-                instance.timeoutId = setTimeout(() => {
-                    this.handlePopupTimeout(config.id);
-                }, config.timeout);
-            }
-
             // Set up webview message handling
             webviewPanel.webview.onDidReceiveMessage((message) => {
                 this.handleWebviewMessage(config.id, message);
@@ -99,7 +92,7 @@ export class PopupManager {
 
     clearAllPopups(): void {
         const popupIds = Array.from(this.state.activePopups.keys());
-        
+
         for (const popupId of popupIds) {
             try {
                 const response: PopupResponse = {
@@ -132,19 +125,21 @@ export class PopupManager {
         try {
             // Get default timeout from extension settings
             const defaultTimeout = vscode.workspace.getConfiguration('redPillMcp').get('popupTimeout', 0);
-            
+
             // Extract popup configuration from message - use the server's popup ID
             const config: PopupConfig = {
                 id: message.popupId, // Use the server's popup ID
                 title: message.options.title,
                 content: message.options.message,
+                type: message.options.type,
+                inputPlaceholder: message.options.inputPlaceholder,
                 buttons: message.options.buttons?.map((label: string) => ({ id: label, label })),
                 timeout: message.options.timeout !== undefined ? message.options.timeout : defaultTimeout
             };
-            
+
             // Create the popup with the server's ID
             await this.createPopup(config);
-            
+
         } catch (error) {
             this.logger.error('Failed to handle popup request:', error);
         }
@@ -160,18 +155,26 @@ export class PopupManager {
                 return;
             }
 
-            const response: PopupResponse = {
+            let response: PopupResponse = {
                 popupId,
-                buttonId: message.buttonId,
-                customText: message.customText,
-                customData: message.data,
                 timestamp: Date.now(),
                 dismissed: message.type === 'dismiss'
             };
-            
+
+            if (message.type === 'button_click') {
+                response.buttonId = message.buttonId;
+                response.customData = message.data;
+                if (message.customText) {
+                    response.customText = message.customText;
+                }
+            } else if (message.type === 'custom_text') {
+                response.customText = message.customText;
+                response.customData = message.data;
+            }
+
             // Send response first, then close popup
             this.sendResponse(response);
-            
+
             // Small delay to ensure response is processed before closing
             setTimeout(() => {
                 this.closePopup(popupId);
@@ -184,7 +187,7 @@ export class PopupManager {
 
     private handlePopupTimeout(popupId: string): void {
         this.logger.info(`Popup ${popupId} timed out`);
-        
+
         const response: PopupResponse = {
             popupId,
             dismissed: true,

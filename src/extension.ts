@@ -29,7 +29,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Initialize popup manager
         popupManager = new PopupManager(context, extensionState, logger);
-        
+
         // Start MCP server
         await startMcpServer();
 
@@ -52,19 +52,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
     logger?.info('Deactivating Red Pill MCP extension...');
-    
+
     try {
         // Clean up popup manager
         popupManager?.dispose();
-        
+
         // Close session WebSocket
         if (sessionWebSocket) {
             sessionWebSocket.close();
         }
-        
+
         // Stop MCP server
         mcpServer?.stop();
-        
+
         logger?.info('Red Pill MCP extension deactivated successfully');
     } catch (error) {
         logger?.error('Error during deactivation:', error);
@@ -74,22 +74,23 @@ export function deactivate() {
 async function startMcpServer(): Promise<void> {
     try {
         const config = configManager.getConfig();
-        
+
         // Extract port from mcpServerUrl (ws://localhost:8080 -> 8080)
         const urlMatch = config.mcpServerUrl.match(/:(\d+)$/);
         const port = urlMatch ? parseInt(urlMatch[1]) : 8080;
-        
+
         const serverConfig = createConfig({
             port: port,
-            logLevel: 'info'
+            logLevel: 'info',
+            popupTimeout: config.popupTimeout && config.popupTimeout > 0 ? config.popupTimeout : 0
         });
-        
+
         mcpServer = new MCPServer(serverConfig, logger);
-        
+
         logger.info(`Starting MCP server on port ${port}...`);
         await mcpServer.start();
         logger.info('MCP server started successfully');
-        
+
     } catch (error) {
         logger.error('Failed to start MCP server:', error);
         vscode.window.showErrorMessage(`Failed to start MCP server: ${error}`);
@@ -100,15 +101,15 @@ async function startMcpServer(): Promise<void> {
 async function restartMcpServer(): Promise<void> {
     try {
         logger.info('Restarting MCP server...');
-        
+
         // Stop existing server
         if (mcpServer) {
             await mcpServer.stop();
         }
-        
+
         // Start new server
         await startMcpServer();
-        
+
         logger.info('MCP server restarted successfully');
         vscode.window.showInformationMessage('MCP server restarted successfully');
     } catch (error) {
@@ -130,7 +131,7 @@ function registerCommands(context: vscode.ExtensionContext) {
                     { id: 'cancel', label: 'Cancel', style: 'secondary' as const }
                 ]
             };
-            
+
             await popupManager.createPopup(testPopup);
             logger.info('Test popup created');
         } catch (error) {
@@ -180,7 +181,7 @@ function registerCommands(context: vscode.ExtensionContext) {
         if (event.affectsConfiguration('redPillMcp')) {
             logger.info('Configuration changed, updating...');
             configManager.refresh();
-            
+
             // Restart server if MCP URL changed
             if (event.affectsConfiguration('redPillMcp.mcpServerUrl')) {
                 logger.info('MCP server URL changed, restarting server...');
@@ -195,19 +196,19 @@ function registerCommands(context: vscode.ExtensionContext) {
 async function registerWithSessionManager(): Promise<void> {
     try {
         const config = configManager.getConfig();
-        
+
         // Extract port from mcpServerUrl (ws://localhost:8080 -> 8080)
         const urlMatch = config.mcpServerUrl.match(/:(\d+)$/);
         const port = urlMatch ? parseInt(urlMatch[1]) : 8080;
         const sessionPort = port + 1; // SessionManager runs on port + 1
-        
+
         logger.info(`Connecting to SessionManager on port ${sessionPort}...`);
-        
+
         sessionWebSocket = new WebSocket(`ws://localhost:${sessionPort}`);
-        
+
         sessionWebSocket.on('open', () => {
             logger.info('Connected to SessionManager');
-            
+
             // Register as VS Code instance
             const registrationMessage = {
                 method: 'identify',
@@ -220,15 +221,15 @@ async function registerWithSessionManager(): Promise<void> {
                     }
                 }
             };
-            
+
             sessionWebSocket.send(JSON.stringify(registrationMessage));
             extensionState.isConnected = true;
         });
-        
+
         sessionWebSocket.on('message', (data) => {
             try {
                 const message = JSON.parse(data.toString());
-                
+
                 // Handle popup requests
                 if (message.type === 'popup_request') {
                     popupManager.handlePopupRequest(message);
@@ -240,17 +241,17 @@ async function registerWithSessionManager(): Promise<void> {
                 logger.error('Failed to parse message from SessionManager:', error);
             }
         });
-        
+
         sessionWebSocket.on('close', () => {
             logger.info('Disconnected from SessionManager');
             extensionState.isConnected = false;
         });
-        
+
         sessionWebSocket.on('error', (error) => {
             logger.error('SessionManager connection error:', error);
             extensionState.isConnected = false;
         });
-        
+
     } catch (error) {
         logger.error('Failed to connect to SessionManager:', error);
         throw error;
@@ -272,7 +273,7 @@ function setupPopupResponseHandling(): void {
                     timedOut: false
                 }
             };
-            
+
             sessionWebSocket.send(JSON.stringify(message));
         } else {
             logger.error('Cannot send popup response - WebSocket not connected');

@@ -40,13 +40,6 @@ export class PopupManager extends EventEmitter {
 
         this.popups.set(popupId, popup);
 
-        // Set up automatic timeout if specified
-        if (options.timeout) {
-            setTimeout(() => {
-                this.timeoutPopup(popupId);
-            }, options.timeout);
-        }
-
         this.logger.debug('Popup created', { popupId });
         this.emit('popup_created', {
             type: 'popup_created',
@@ -182,21 +175,24 @@ export class PopupManager extends EventEmitter {
             return popup.result;
         }
 
-        // Wait for resolution
         return new Promise<PopupResult>((resolve, reject) => {
-            const effectiveTimeout = timeout || this.config.popupTimeout;
+            const effectiveTimeout =
+                timeout !== undefined && timeout !== null ? timeout : this.config.popupTimeout;
 
-            const timeoutId = setTimeout(() => {
-                // Remove this waiter from the list
-                const waiters = this.popupWaiters.get(popupId);
-                if (waiters) {
-                    const index = waiters.findIndex(w => w.resolve === resolve);
-                    if (index >= 0) {
-                        waiters.splice(index, 1);
+            let timeoutId: NodeJS.Timeout | undefined;
+            if (effectiveTimeout && effectiveTimeout > 0) {
+                timeoutId = setTimeout(() => {
+                    // Remove this waiter from the list
+                    const waiters = this.popupWaiters.get(popupId);
+                    if (waiters) {
+                        const index = waiters.findIndex(w => w.resolve === resolve);
+                        if (index >= 0) {
+                            waiters.splice(index, 1);
+                        }
                     }
-                }
-                reject(new Error(`Timeout waiting for popup ${popupId} after ${effectiveTimeout}ms`));
-            }, effectiveTimeout);
+                    reject(new Error(`Timeout waiting for popup ${popupId} after ${effectiveTimeout}ms`));
+                }, effectiveTimeout);
+            }
 
             const waiter: PopupWaiter = {
                 resolve,
@@ -216,16 +212,20 @@ export class PopupManager extends EventEmitter {
 
     async waitForAnyPopupResponse(timeout?: number): Promise<PopupResult> {
         return new Promise<PopupResult>((resolve, reject) => {
-            const effectiveTimeout = timeout || this.config.popupTimeout;
+            const effectiveTimeout =
+                timeout !== undefined && timeout !== null ? timeout : this.config.popupTimeout;
 
-            const timeoutId = setTimeout(() => {
-                // Remove this waiter from global waiters
-                const index = this.globalWaiters.findIndex(w => w.resolve === resolve);
-                if (index >= 0) {
-                    this.globalWaiters.splice(index, 1);
-                }
-                reject(new Error(`Timeout waiting for any popup response after ${effectiveTimeout}ms`));
-            }, effectiveTimeout);
+            let timeoutId: NodeJS.Timeout | undefined;
+            if (effectiveTimeout && effectiveTimeout > 0) {
+                timeoutId = setTimeout(() => {
+                    // Remove this waiter from global waiters
+                    const index = this.globalWaiters.findIndex(w => w.resolve === resolve);
+                    if (index >= 0) {
+                        this.globalWaiters.splice(index, 1);
+                    }
+                    reject(new Error(`Timeout waiting for any popup response after ${effectiveTimeout}ms`));
+                }, effectiveTimeout);
+            }
 
             const waiter: PopupWaiter = {
                 resolve,
@@ -352,7 +352,7 @@ export class PopupManager extends EventEmitter {
 
             await this.sessionManager.sendToClient(popup.vscodeInstanceId, message);
             this.logger.debug('Popup sent to VS Code', { popupId });
-            
+
         } catch (error) {
             this.logger.error('Failed to send popup to VS Code', { popupId, error });
             throw error;

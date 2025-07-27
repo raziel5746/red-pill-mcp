@@ -111,7 +111,6 @@ Display a popup in VS Code with text and options.
       "buttons": ["OK", "Cancel"],
       "defaultButton": "OK",
       "timeout": 30000,
-      "modal": true,
       "inputPlaceholder": "Enter value..."
     }
   }

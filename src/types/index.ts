@@ -49,7 +49,7 @@ export interface ClientConnection {
 }
 
 // Popup Types with Zod Schemas
-export const PopupTypeSchema = z.enum(['info', 'warning', 'error', 'question', 'input']);
+export const PopupTypeSchema = z.enum(['question', 'input']);
 export type PopupType = z.infer<typeof PopupTypeSchema>;
 
 export const PopupOptionsSchema = z.object({
@@ -59,7 +59,6 @@ export const PopupOptionsSchema = z.object({
     buttons: z.array(z.string()).optional(),
     defaultButton: z.string().optional(),
     timeout: z.number().optional(),
-    modal: z.boolean().optional(),
     inputPlaceholder: z.string().optional()
 });
 export type PopupOptions = z.infer<typeof PopupOptionsSchema>;
@@ -184,7 +183,7 @@ export type ServerEvent = {
     error: HealthError;
 };
 
-// Legacy Types (for backward compatibility with extension)
+// Popup configuration used by the VS Code extension
 export interface PopupConfig {
     id: string;
     title: string;
@@ -193,6 +192,8 @@ export interface PopupConfig {
     timeout?: number;
     priority?: 'low' | 'medium' | 'high';
     metadata?: Record<string, any>;
+    type?: 'question' | 'input';
+    inputPlaceholder?: string;
 }
 
 export interface PopupButton {

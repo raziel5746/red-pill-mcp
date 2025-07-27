@@ -79,7 +79,13 @@ export class MCPServer extends EventEmitter {
                 tools: [
                     {
                         name: 'show_popup',
-                        description: 'Display a popup in VS Code with text and options, and wait for user response',
+                        description: 'Display a popup in VS Code and return the user\'s choice or text.  ' +
+                                     'The \"type\" field controls style/behaviour: \n' +
+                                     '  • question – normal popup with optional buttons and Custom text feature.\n' +
+                                     '    Provide a "buttons" array for custom labels; omit for default OK / Cancel.  Users can also click the built-in "Custom text" button to send free-form text.\n' +
+                                     '  • input – shows a multiline text area (Enter = newline, Ctrl+Enter = send).  "buttons" is ignored.\n' +
+                                     'Set "timeout" (ms) to enable a countdown (0 = no timeout).  Users may pause the countdown by clicking it.  ' +
+                                     'Returns structuredContent { "response": "<button label | typed text | cancelled | timed out>" }.' ,
                         inputSchema: {
                             type: 'object',
                             properties: {
@@ -94,7 +100,7 @@ export class MCPServer extends EventEmitter {
                                         message: { type: 'string', description: 'Popup message' },
                                         type: {
                                             type: 'string',
-                                            enum: ['info', 'warning', 'error', 'question', 'input'],
+                                            enum: ['question', 'input'],
                                             description: 'Popup type'
                                         },
                                         buttons: {
@@ -104,7 +110,6 @@ export class MCPServer extends EventEmitter {
                                         },
                                         defaultButton: { type: 'string', description: 'Default button (optional)' },
                                         timeout: { type: 'number', description: 'Timeout in milliseconds (optional)' },
-                                        modal: { type: 'boolean', description: 'Modal popup (optional)' },
                                         inputPlaceholder: { type: 'string', description: 'Input placeholder for input type (optional)' }
                                     },
                                     required: ['title', 'message', 'type']
@@ -181,27 +186,36 @@ export class MCPServer extends EventEmitter {
 
         // Create popup and wait for response
         const popupId = await this.popupManager.createPopup(aiClient.id, vscodeInstance.id, params.options);
-        const result = await this.popupManager.waitForPopupResponse(popupId, params.options.timeout);
-        
-        // Format according to MCP protocol
-        let textContent = 'User response: ';
+        const result = await this.popupManager.waitForPopupResponse(popupId, undefined);
+
+        // Derive a single response value for clarity
+        let response: string | undefined;
+        let textContent: string;
+
         if (result.timedOut) {
             textContent = 'Popup timed out';
+            response = 'timed out';
         } else if (result.cancelled) {
             textContent = 'Popup was cancelled';
-        } else if (result.button) {
-            textContent = `User clicked: ${result.button}`;
-        } else if (result.input) {
-            textContent = `User entered: ${result.input}`;
+            response = 'cancelled';
         } else if (result.customText) {
-            textContent = `User entered custom text: ${result.customText}`;
+            response = result.customText;
+            textContent = response;
+        } else if (result.button) {
+            response = result.button;
+            textContent = response;
+        } else if (result.input) {
+            response = result.input;
+            textContent = response;
         } else {
             textContent = 'Popup closed';
+            response = 'closed';
         }
 
+        // Return streamlined structured content
         return {
             content: [{ type: 'text', text: textContent }],
-            structuredContent: { popupId, ...result }
+            structuredContent: { "response": response }
         };
     }
 
@@ -210,7 +224,7 @@ export class MCPServer extends EventEmitter {
         this.logger.debug('Handling list_active_popups request', params);
 
         const popups = this.popupManager.getActivePopups(params.vscodeInstanceId);
-        
+
         return {
             content: [{ type: 'text', text: `Found ${popups.length} active popup(s)` }],
             structuredContent: { popups }
@@ -241,13 +255,13 @@ export class MCPServer extends EventEmitter {
                 if (req.method === 'GET' && req.url === '/') {
                     // Handle SSE connection
                     this.logger.info('New SSE connection for MCP');
-                    
+
                     const transport = new SSEServerTransport('/messages', res);
                     await transport.start();
-                    
+
                     // Store transport by session ID for message routing
                     this.sseTransports.set(transport.sessionId, transport);
-                    
+
                     // Register AI client session with SessionManager
                     this.sessionManager.registerAIClient(transport.sessionId, {
                         userAgent: req.headers['user-agent'] || 'MCP Client',
@@ -255,33 +269,33 @@ export class MCPServer extends EventEmitter {
                         capabilities: ['popup_tools'],
                         clientName: 'AI Assistant'
                     });
-                    
+
                     // Connect the MCP server to this SSE transport
                     await this.server.connect(transport);
-                    
+
                     // Clean up when connection closes
                     res.on('close', () => {
                         this.sseTransports.delete(transport.sessionId);
                         this.sessionManager.disconnectClient(transport.sessionId, 'SSE connection closed');
                         this.logger.debug('SSE connection closed', { sessionId: transport.sessionId });
                     });
-                    
+
                 } else if (req.method === 'POST' && req.url?.startsWith('/messages')) {
                     // Handle incoming messages
                     let body = '';
                     req.on('data', chunk => {
                         body += chunk.toString();
                     });
-                    
+
                     req.on('end', async () => {
                         try {
                             const message = JSON.parse(body);
                             this.logger.debug('Received MCP message via POST', message);
-                            
+
                             // Extract session ID from URL
                             const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');
                             const sessionId = urlParams.get('sessionId');
-                            
+
                             if (sessionId && this.sseTransports.has(sessionId)) {
                                 // Route message to the correct SSE transport
                                 const transport = this.sseTransports.get(sessionId);

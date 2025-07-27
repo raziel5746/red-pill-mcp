@@ -6,6 +6,7 @@
     let timeoutInterval = null;
     let remainingTime = 0;
     let isDisposed = false;
+    let countdownPaused = false;
 
     // Initialize popup
     function initializePopup() {
@@ -55,8 +56,7 @@
             closeButton.addEventListener('click', handleClose);
         }
 
-        // Action buttons (excluding custom text button to avoid conflicts)
-        const buttons = document.querySelectorAll('.popup-button:not(#customTextButton)');
+        const buttons = document.querySelectorAll('.popup-actions .popup-button:not(#customTextButton)');
         try {
             vscode.postMessage({
                 type: 'debug',
@@ -86,6 +86,35 @@
         }
         if (cancelCustomTextButton) {
             cancelCustomTextButton.addEventListener('click', handleCancelCustomText);
+        }
+        if (customTextInput) {
+            customTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleSendCustomText();
+                }
+            });
+        }
+
+        // Input type specific handlers
+        if (popupConfig.type === 'input') {
+            const sendInputButton = document.getElementById('sendInputButton');
+            const inputTextArea = document.getElementById('inputTextArea');
+            if (sendInputButton) {
+                sendInputButton.addEventListener('click', handleSendInput);
+            }
+            const cancelInputButton = document.getElementById('cancelInputButton');
+            if (cancelInputButton) {
+                cancelInputButton.addEventListener('click', handleClose);
+            }
+            if (inputTextArea) {
+                inputTextArea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        handleSendInput();
+                    }
+                });
+            }
         }
 
         // Keyboard shortcuts
@@ -274,11 +303,11 @@
         try {
             vscode.postMessage({
                 type: 'debug',
-                message: `Sending custom text: ${customText}`,
-                responseData: responseData
+                message: 'Sending custom text response',
+                customText: customText
             });
         } catch (e) {
-            // Ignore errors
+            // Ignore
         }
 
         sendMessage(responseData);
@@ -286,6 +315,20 @@
 
     function handleCancelCustomText() {
         handleCustomTextToggle(); // This will hide the custom text area and show regular buttons
+    }
+
+    function handleSendInput() {
+        if (isDisposed) return;
+        const inputTextArea = document.getElementById('inputTextArea');
+        const text = inputTextArea ? inputTextArea.value.trim() : '';
+        if (!text) return;
+        const responseData = {
+            type: 'button_click',
+            buttonId: 'input',
+            data: { inputValue: text },
+            timestamp: Date.now()
+        };
+        sendMessage(responseData);
     }
 
     function handleClose() {
@@ -312,6 +355,16 @@
                 break;
 
             case 'Enter':
+                // Allow multiline editing in textarea/input unless Ctrl+Enter is pressed
+                if (document.activeElement && (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT')) {
+                    if (event.ctrlKey) {
+                        // Ctrl+Enter should submit via specific handlers; do nothing here.
+                        return;
+                    }
+                    // Plain Enter inside textarea/input inserts newline – do not prevent.
+                    return;
+                }
+
                 // If focus is on a button, trigger click
                 if (document.activeElement && document.activeElement.classList.contains('popup-button')) {
                     event.preventDefault();
@@ -380,10 +433,27 @@
     function startTimeoutCountdown() {
         remainingTime = Math.ceil(popupConfig.timeout / 1000);
         const timeoutDisplay = document.getElementById('timeoutDisplay');
-
         if (!timeoutDisplay) return;
 
+        // Click to pause/resume
+        timeoutDisplay.addEventListener('click', () => {
+            if (!timeoutInterval) return; // nothing to pause if no interval
+            if (countdownPaused) {
+                // resume
+                countdownPaused = false;
+                timeoutDisplay.classList.remove('paused');
+                timeoutDisplay.textContent = `Timeout: ${remainingTime}s`; // reset text
+            } else {
+                // pause
+                countdownPaused = true;
+                timeoutDisplay.classList.add('paused');
+                timeoutDisplay.textContent = `Timeout: ${remainingTime}s ⏸`;
+            }
+        });
+
         timeoutInterval = setInterval(() => {
+            if (countdownPaused) return; // skip tick while paused
+
             remainingTime--;
             timeoutDisplay.textContent = `Timeout: ${remainingTime}s`;
 
@@ -395,14 +465,11 @@
             // Auto-close when timeout reaches 0
             if (remainingTime <= 0) {
                 clearInterval(timeoutInterval);
-                console.log('Popup timed out');
-
                 const responseData = {
                     type: 'timeout',
                     timestamp: Date.now(),
                     dismissed: true
                 };
-
                 sendMessage(responseData);
             }
         }, 1000);

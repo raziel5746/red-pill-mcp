@@ -3,7 +3,12 @@
   "displayName": "Red Pill MCP",
   "description": "VS Code extension enabling AI-to-User popup communication via MCP",
   "version": "0.1.0",
-  "publisher": "red-pill-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raz-labs/red-pill-mcp.git"
+  },
+  "license": "MIT",
+  "publisher": "raz-labs",
   "engines": {
     "vscode": "^1.80.0"
   },

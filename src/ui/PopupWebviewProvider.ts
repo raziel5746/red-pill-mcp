@@ -42,18 +42,18 @@ export class PopupWebviewProvider {
             vscode.Uri.joinPath(this.context.extensionUri, 'media', 'popup.js')
         );
 
-        // Generate buttons HTML
-        const buttonsHtml = this.config.buttons?.map(button => {
+        // Generate buttons HTML (not used for input type)
+        const buttonsHtml = this.config.type !== 'input' ? (this.config.buttons?.map(button => {
             return `
-            <button 
-                class="popup-button popup-button--${button.style || 'secondary'}" 
+            <button
+                class="popup-button popup-button--${button.style || 'secondary'}"
                 data-button-id="${button.id}"
                 data-action="${button.action || ''}"
             >
                 ${this.escapeHtml(button.label)}
             </button>
         `;
-        }).join('') || '';
+        }).join('') || '') : '';
 
         return `
         <!DOCTYPE html>
@@ -71,12 +71,12 @@ export class PopupWebviewProvider {
                     <h2 class="popup-title">${this.escapeHtml(this.config.title || 'AI Message')}</h2>
                     <button class="popup-close" id="closeButton" title="Close">×</button>
                 </div>
-                
+
                 <div class="popup-content">
                     <div class="popup-message">
                         ${this.formatContent(this.config.content)}
                     </div>
-                    
+
                     ${this.config.metadata ? `
                         <div class="popup-metadata">
                             <details>
@@ -85,56 +85,83 @@ export class PopupWebviewProvider {
                             </details>
                         </div>
                     ` : ''}
+
+                    ${this.config.type === 'input' ? `
+                        <div class="popup-input-area" id="inputArea">
+                            <textarea
+                                id="inputTextArea"
+                                placeholder="${this.escapeHtml(this.config.inputPlaceholder || 'Enter text...')}"
+                                rows="4"
+                                class="popup-textarea"
+                            ></textarea>
+                        </div>
+                    ` : ''}
                 </div>
-                
+
                 <div class="popup-actions">
                     ${buttonsHtml}
-                    <button 
-                        class="popup-button popup-button--secondary" 
-                        id="customTextButton"
-                        data-action="custom-text"
-                    >
-                        Custom text
-                    </button>
+                    ${this.config.type !== 'input' ? `
+                        <button
+                            class="popup-button popup-button--secondary"
+                            id="customTextButton"
+                            data-action="custom-text"
+                        >
+                            Custom text
+                        </button>
+                    ` : ''}
+                    ${this.config.type === 'input' ? `
+                        <button
+                            class="popup-button popup-button--primary"
+                            id="sendInputButton"
+                        >
+                            Send
+                        </button>
+                        <button
+                            class="popup-button popup-button--secondary"
+                            id="cancelInputButton"
+                        >
+                            Cancel
+                        </button>
+                    ` : ''}
                 </div>
-                
+
+                ${this.config.type !== 'input' ? `
                 <div class="popup-custom-text" id="customTextArea" style="display: none;">
-                    <textarea 
-                        id="customTextInput" 
-                        placeholder="Enter your custom response here..." 
+                    <textarea
+                        id="customTextInput"
+                        placeholder="Enter your custom response here..."
                         rows="3"
                         class="popup-textarea"
                     ></textarea>
                     <div class="popup-custom-actions">
-                        <button 
-                            class="popup-button popup-button--primary" 
+                        <button
+                            class="popup-button popup-button--primary"
                             id="sendCustomTextButton"
                         >
                             Send
                         </button>
-                        <button 
-                            class="popup-button popup-button--secondary" 
+                        <button
+                            class="popup-button popup-button--secondary"
                             id="cancelCustomTextButton"
                         >
                             Cancel
                         </button>
                     </div>
-                </div>
-                
-                <div class="popup-footer">
-                    <span class="popup-id">ID: ${this.escapeHtml(this.config.id)}</span>
-                    ${this.config.timeout ? `
+                </div>` : ''}
+
+                ${this.config.timeout ? `
+                    <div class="popup-footer">
                         <span class="popup-timeout">
                             <span id="timeoutDisplay">Timeout: ${Math.ceil(this.config.timeout / 1000)}s</span>
                         </span>
-                    ` : ''}
-                </div>
+                    </div>
+                ` : ''}
             </div>
-            
+
             <script>
                 const vscode = acquireVsCodeApi();
                 const popupConfig = ${JSON.stringify(this.config)};
-                
+
                 // Test if vscode API is working
                 try {
                     vscode.postMessage({
@@ -155,22 +182,22 @@ export class PopupWebviewProvider {
     private formatContent(content: string): string {
         // Basic markdown-like formatting
         let formatted = this.escapeHtml(content);
-        
+
         // Convert line breaks
         formatted = formatted.replace(/\n/g, '<br>');
-        
+
         // Convert **bold** to <strong>
         formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
+
         // Convert *italic* to <em>
         formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
+
         // Convert `code` to <code>
         formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
-        
+
         // Convert [link](url) to <a>
         formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-        
+
         return formatted;
     }
 

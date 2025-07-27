@@ -48,6 +48,7 @@ body {
         opacity: 0;
         transform: translateY(-20px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -255,16 +256,30 @@ body {
 
 .popup-timeout {
     font-weight: 500;
+    cursor: default;
 }
 
 .popup-timeout.warning {
-    color: var(--vscode-notificationsWarningIcon-foreground, #ffcc02);
+    color: #ff4444;
     animation: pulse 1s ease-in-out infinite;
 }
 
+.popup-timeout,
+#timeoutDisplay.paused {
+    opacity: 0.6;
+    cursor: pointer;
+}
+
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 /* Responsive design */
@@ -349,7 +364,9 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Custom text area styles */
